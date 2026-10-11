@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify, Response, request
+from flask import Flask, jsonify, Response
 
 app = Flask(__name__)
 
@@ -9,21 +9,15 @@ LOG_PATH = "/var/log/app/visitas.log"
 os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
 
 
-def append_visit_log() -> None:
-    # Append each incoming request path to the shared log file.
-    with open(LOG_PATH, "a", encoding="utf-8") as log_file:
-        log_file.write(f"{request.method} {request.path}\n")
-
-
-@app.before_request
-def log_request() -> None:
-    append_visit_log()
-
-
 @app.get("/")
 def home() -> Response:
     # Build the required greeting using environment variables.
     message = f"Hola, I am {STUDENT_NAME} and I live in {BARRIO}"
+
+    # Log only GET / requests, one greeting per line.
+    with open(LOG_PATH, "a", encoding="utf-8") as log_file:
+        log_file.write(message + "\n")
+
     return Response(message, mimetype="text/plain")
 
 
