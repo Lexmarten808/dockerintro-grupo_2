@@ -1,7 +1,8 @@
 import os
+from datetime import datetime
 from pathlib import Path
 
-from flask import Flask, Response, jsonify, request
+from flask import Flask, Response, jsonify
 
 app = Flask(__name__)
 
@@ -12,24 +13,21 @@ LOG_FILE = "/var/log/app/visitas.log"
 Path("/var/log/app").mkdir(parents=True, exist_ok=True)
 
 
-def append_visit() -> None:
-    """Append each incoming request to the shared visits log."""
+def append_visit(message: str) -> None:
+    """Append each visit to the shared visits log."""
     try:
         with open(LOG_FILE, "a", encoding="utf-8") as file:
-            file.write(f"{request.method} {request.path}\n")
+            timestamp = datetime.now().isoformat(timespec="seconds")
+            file.write(f"{timestamp} {message}\n")
     except OSError:
         # Keep service available even if log volume is unavailable.
         pass
 
 
-@app.before_request
-def log_request() -> None:
-    append_visit()
-
-
 @app.get("/")
 def home() -> Response:
     message = f"Hola, I am {STUDENT_NAME} and I live in {BARRIO}"
+    append_visit(message)
     return Response(message, mimetype="text/plain")
 
 
